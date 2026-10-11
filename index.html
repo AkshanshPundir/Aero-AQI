@@ -685,19 +685,116 @@ button.node.picked{outline:calc(2*var(--u)) solid #fff;outline-offset:calc(2*var
     }
   }
 
-  /* ---------- 2. LIVE AQI DATA ---------- */
+  /* ---------- 2. LIVE AQI DATA (multi-source + CPCB brackets + sim fallback) ----------
+     Chain per station: WAQI feed (station ID or geo) -> Open-Meteo -> OpenAQ v2 Delhi.
+     Raw PM2.5/PM10 become official Indian CPCB AQI via breakpoint interpolation.
+     All dead -> simulated Severe stream (310-425, 5s ticks) for demos. */
   var SITES=[
-    {k:'av',   lat:28.6509,lon:77.3155,base:412},
+    {k:'av',   lat:28.6509,lon:77.3155,base:412,w:'@7023'},
     {k:'pb',   lat:28.6681,lon:77.1246,base:342},
     {k:'rkp',  lat:28.5631,lon:77.1867,base:388},
-    {k:'sec62',lat:28.6139,lon:77.3655,base:365},
+    {k:'sec62',lat:28.6139,lon:77.3655,base:365,w:'@8368'},
     {k:'meerut',lat:28.9845,lon:77.7064,base:328},
     {k:'cyber',lat:28.4952,lon:77.0890,base:284},
     {k:'knp',  lat:28.4744,lon:77.5030,base:352}
   ];
-  var BASE={};SITES.forEach(function(s){BASE[s.k]=s.base});
+  var WAQI_TOKEN='demo';
   var MIN_LIVE=150; // below this, keep curated Severe-context defaults (284-412)
-  var MAX_LIVE=500; // US AQI scale tops at 500 ("beyond index") - clamp spikes
+  var MAX_LIVE=500; // AQI scale tops at 500 ("beyond index") - clamp spikes
+  var SIM_LO=310, SIM_HI=425; // demo-stream Severe band
+  /* CPCB official breakpoint tables: [concLo,concHi,idxLo,idxHi] */
+  var PM25_BP=[[0,30,0,50],[31,60,51,100],[61,90,101,200],[91,120,201,300],[121,250,301,400],[251,5000,401,500]];
+  var PM10_BP=[[0,50,0,50],[51,100,51,100],[101,250,101,200],[251,350,201,300],[351,430,301,400],[431,8000,401,500]];
+  function subIndex(c,bp){
+    if(c==null||isNaN(c)||c<0)return null;
+    for(var i=0;i<bp.length;i++){var b=bp[i];
+      if(c<=b[1]){if(b[1]===b[0])return b[3];
+        return Math.round((b[3]-b[2])/(b[1]-b[0])*(c-b[0])+b[2]);}}
+    return 500;
+  }
+  function cpcbAqi(pm25,pm10){
+    var m=null,a=subIndex(pm25==null?null:+pm25,PM25_BP),b=subIndex(pm10==null?null:+pm10,PM10_BP);
+    if(a!=null)m=a;if(b!=null)m=(m==null?b:Math.max(m,b));return m;
+  }
+  function clockStamp(){var d=new Date();return('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
+  function getJSON(url,ms){
+    return new Promise(function(res,rej){
+      var ctrl=null,timer=null;
+      try{ctrl=new AbortController();}catch(e){}
+      if(ctrl)timer=setTimeout(function(){try{ctrl.abort()}catch(e){}},ms||6000);
+      fetch(url,ctrl?{signal:ctrl.signal}:{}).then(function(r){
+        if(timer)clearTimeout(timer);
+        if(!r.ok)throw new Error('http '+r.status);
+        return r.json();
+      }).then(res,rej);
+    });
+  }
+  /* Source 1: WAQI station feed (explicit ID or nearest via geo) */
+  function waqiFor(s){
+    var url=s.w
+      ?'https://api.waqi.info/feed/'+s.w+'/?token='+WAQI_TOKEN
+      :'https://api.waqi.info/feed/geo:'+s.lat+';'+s.lon+'/?token='+WAQI_TOKEN;
+    return getJSON(url,6000).then(function(j){
+      if(!j||j.status!=='ok'||!j.data)return null;
+      var d=j.data,iq=d.iaqi||{};
+      var pm25=(iq.pm25&&iq.pm25.v!=null)?+iq.pm25.v:null;
+      var pm10=(iq.pm10&&iq.pm10.v!=null)?+iq.pm10.v:null;
+      var a=cpcbAqi(pm25,pm10);
+      if(a==null&&d.aqi!=null&&!isNaN(+d.aqi))a=Math.round(+d.aqi); // feed fallback
+      if(a==null)return null;
+      return{aqi:Math.min(MAX_LIVE,a),pm:(pm25!=null?Math.round(pm25):null)};
+    },function(){return null});
+  }
+  /* Source 2: Open-Meteo multi-coordinate current values (one call) */
+  var omCache=null;
+  function omAll(){
+    if(omCache)return omCache;
+    var lats=SITES.map(function(s){return s.lat}).join(',');
+    var lons=SITES.map(function(s){return s.lon}).join(',');
+    omCache=getJSON('https://air-quality-api.open-meteo.com/v1/air-quality?latitude='+lats
+      +'&longitude='+lons+'&current=us_aqi,pm2_5,pm10&timezone=Asia%2FKolkata',8000
+    ).then(function(j){return Array.isArray(j)?j:[j]},function(){return null});
+    return omCache;
+  }
+  function omFor(i){
+    return omAll().then(function(arr){
+      if(!arr||!arr[i]||!arr[i].current)return null;
+      var c=arr[i].current;
+      var a=cpcbAqi(c.pm2_5!=null?+c.pm2_5:null,c.pm10!=null?+c.pm10:null);
+      if(a==null&&c.us_aqi!=null&&!isNaN(+c.us_aqi))a=Math.round(+c.us_aqi);
+      if(a==null)return null;
+      return{aqi:Math.min(MAX_LIVE,a),pm:(c.pm2_5!=null?Math.round(+c.pm2_5):null)};
+    });
+  }
+  /* Source 3: OpenAQ v2 Delhi, nearest station match per site */
+  var aqCache=null;
+  function aqAll(){
+    if(aqCache)return aqCache;
+    aqCache=getJSON('https://api.openaq.org/v2/latest?city=Delhi&parameter[]=pm25&parameter[]=pm10&limit=100&order_by=lastUpdated&sort=desc',8000
+    ).then(function(j){return(j&&j.results)||null},function(){return null});
+    return aqCache;
+  }
+  function aqFor(s){
+    return aqAll().then(function(res){
+      if(!res||!res.length)return null;
+      var best=null,bd=1e9;
+      res.forEach(function(r){
+        if(!r.coordinates||!r.measurements)return;
+        var dd=Math.pow(r.coordinates.latitude-s.lat,2)+Math.pow(r.coordinates.longitude-s.lon,2);
+        var p25=null,p10=null;
+        r.measurements.forEach(function(m){
+          if(m.parameter==='pm25'&&m.value!=null)p25=+m.value;
+          if(m.parameter==='pm10'&&m.value!=null)p10=+m.value;
+        });
+        if(p25==null&&p10==null)return;
+        if(dd<bd){bd=dd;best={p25:p25,p10:p10}}
+      });
+      if(!best)return null;
+      var a=cpcbAqi(best.p25,best.p10);
+      if(a==null)return null;
+      return{aqi:Math.min(MAX_LIVE,a),pm:(best.p25!=null?Math.round(best.p25):null)};
+    });
+  }
   function toast2(m){
     var box=$('toasts');if(!box)return;
     var d=document.createElement('div');d.className='toast';d.textContent=m;box.appendChild(d);
@@ -714,7 +811,7 @@ button.node.picked{outline:calc(2*var(--u)) solid #fff;outline-offset:calc(2*var
     if(!em)return;
     em.classList.remove('sev','haz','vpoor');em.classList.add(cls);em.textContent=txt;
   }
-  function applyLive(vals,stamp){
+  function applyLive(vals,stamp,mode,quiet){
     var any=false;
     // main hero card <- Anand Vihar
     if(vals.av){
@@ -723,7 +820,7 @@ button.node.picked{outline:calc(2*var(--u)) solid #fff;outline-offset:calc(2*var
       if(vals.av_pm)$('mainPm').textContent=vals.av_pm+' µg/m³';
       any=true;
     }
-    // neighbour node cards
+    // neighbour node cards (distinct per-station values)
     Array.prototype.forEach.call(document.querySelectorAll('button.node[data-site]'),function(btn){
       var v=vals[btn.getAttribute('data-site')];if(v==null)return;
       var b=bandFor(v);if(!b)return;
@@ -745,41 +842,76 @@ button.node.picked{outline:calc(2*var(--u)) solid #fff;outline-offset:calc(2*var
         if(bandFor(v))p[3]=v;
       });
     }
-    if(any){
+    if(any&&!quiet){
       var fh=document.querySelector('.f-head span');
-      if(fh)fh.textContent='LIVE • Open-Meteo '+stamp;
-      toast2('Live AQI synced • Open-Meteo');
+      if(fh)fh.textContent=(mode==='SIM'?'SIM • demo stream ':'LIVE • NCR mesh ')+stamp;
+      toast2(mode==='SIM'?'Demo stream active (310-425)':'Live AQI synced • NCR mesh');
+    }else if(any&&mode==='SIM'){
+      var fh2=document.querySelector('.f-head span');
+      if(fh2)fh2.textContent='SIM • demo stream '+stamp;
     }
   }
+  /* Simulated Severe stream: every 5s random-walk each site inside 310-425 */
+  var simTimer=null,retryTimer=null,simVals=null,simOn=false;
+  function tickSim(){
+    if(!simOn)return;
+    var vals={};
+    SITES.forEach(function(s){
+      var v=Math.round(simVals[s.k]+(Math.random()*10-5));
+      v=Math.max(SIM_LO,Math.min(SIM_HI,v));
+      simVals[s.k]=v;vals[s.k]=v;
+    });
+    vals.av_pm=Math.round(vals.av*0.93);
+    applyLive(vals,clockStamp(),'SIM',true);
+  }
+  function startSim(){
+    if(simOn)return;simOn=true;
+    simVals={};
+    SITES.forEach(function(s){simVals[s.k]=Math.max(SIM_LO,Math.min(SIM_HI,s.base))});
+    toast2('Offline mode • demo stream active (310-425)');
+    tickSim();
+    if(!simTimer)simTimer=setInterval(tickSim,5000);
+    if(!retryTimer)retryTimer=setInterval(function(){if(!document.hidden)syncLive()},60000);
+  }
+  function stopSim(){
+    simOn=false;
+    if(simTimer){clearInterval(simTimer);simTimer=null}
+    if(retryTimer){clearInterval(retryTimer);retryTimer=null}
+  }
   function syncLive(){
-    var ctrl=null;
-    try{ctrl=new AbortController();}catch(e){}
-    var timer=setTimeout(function(){try{if(ctrl)ctrl.abort()}catch(e){}},9000);
-    var lats=SITES.map(function(s){return s.lat}).join(',');
-    var lons=SITES.map(function(s){return s.lon}).join(',');
-    var url='https://air-quality-api.open-meteo.com/v1/air-quality?latitude='+lats
-      +'&longitude='+lons+'&current=us_aqi,pm2_5&timezone=Asia%2FKolkata';
-    fetch(url,ctrl?{signal:ctrl.signal}:{}).then(function(r){
-      clearTimeout(timer);
-      if(!r.ok)throw new Error('http '+r.status);
-      return r.json();
-    }).then(function(j){
-      var arr=Array.isArray(j)?j:[j], vals={}, stamp='';
-      arr.forEach(function(item,i){
-        var c=item&&item.current;if(!c)return;
-        var aqi=(c.us_aqi==null?null:Math.round(c.us_aqi));
-        if(aqi==null||aqi<MIN_LIVE)return; // keep curated Severe defaults
-        aqi=Math.min(MAX_LIVE,aqi);
-        vals[SITES[i].k]=aqi;
-        if(c.pm2_5!=null)vals[SITES[i].k+'_pm']=Math.round(c.pm2_5);
-        if(c.time)stamp=c.time.slice(11,16);
+    omCache=null;aqCache=null; // fresh sources every round
+    var jobs=SITES.map(function(s,i){
+      return waqiFor(s).then(function(r){
+        if(r&&r.aqi>=MIN_LIVE)return r;
+        return omFor(i).then(function(r2){
+          if(r2&&r2.aqi>=MIN_LIVE)return r2;
+          return aqFor(s);
+        });
+      }).then(function(r){
+        if(r&&r.aqi>=MIN_LIVE)return{k:s.k,v:r};
+        return null;
+      },function(){return null});
+    });
+    Promise.all(jobs).then(function(out){
+      var vals={},n=0;
+      out.forEach(function(o){
+        if(!o)return;
+        vals[o.k]=o.v.aqi;
+        if(o.v.pm!=null)vals[o.k+'_pm']=o.v.pm;
+        n++;
       });
-      if(stamp===''){var d=new Date();stamp=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
-      applyLive(vals,stamp||'now');
-    }).catch(function(){clearTimeout(timer);/* silent: curated NCR defaults stay on screen */});
+      if(n>0){
+        var wasSim=simOn;stopSim();
+        applyLive(vals,clockStamp(),'LIVE',true);
+        var fh=document.querySelector('.f-head span');
+        if(fh)fh.textContent='LIVE • NCR mesh '+clockStamp();
+        toast2(wasSim?'Back online • live telemetry':'Live AQI synced • NCR mesh');
+      }
+      else startSim();
+    });
   }
   setTimeout(syncLive,2000); // first sync after entry choreography
-  setInterval(function(){if(!document.hidden)syncLive()},600000); // refresh every 10 min
+  setInterval(function(){if(!document.hidden&&!simOn)syncLive()},600000); // refresh every 10 min
 })();
 </script>
 </body>
