@@ -8,13 +8,12 @@
 
 [![Deploy to GitHub Pages](https://github.com/AkshanshPundir/Aero-AQI/actions/workflows/deploy.yml/badge.svg)](https://github.com/AkshanshPundir/Aero-AQI/actions/workflows/deploy.yml)
 [![Live Demo](https://img.shields.io/badge/demo-live-4ade80?style=flat-square&logo=githubpages&logoColor=white)](https://akshanshpundir.github.io/Aero-AQI/)
-[![Static Page](https://img.shields.io/badge/static-aero--aqi.html-38bdf8?style=flat-square)](https://akshanshpundir.github.io/Aero-AQI/aero-aqi.html)
-[![React](https://img.shields.io/badge/react-18-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev)
-[![Vite](https://img.shields.io/badge/vite-6-a855f7?style=flat-square&logo=vite&logoColor=white)](https://vite.dev)
-[![TypeScript](https://img.shields.io/badge/typescript-5.7-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![HTML5](https://img.shields.io/badge/html5-single--file-e34f26?style=flat-square&logo=html5&logoColor=white)](./aero-aqi.html)
+[![CSS3](https://img.shields.io/badge/css3-liquid--glass-1572b6?style=flat-square&logo=css3&logoColor=white)](./aero-aqi.html)
+[![JavaScript](https://img.shields.io/badge/javascript-vanilla-f7df1e?style=flat-square&logo=javascript&logoColor=black)](./aero-aqi.html)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow?style=flat-square)](./LICENSE)
 
-**[🚀 Live React App](https://akshanshpundir.github.io/Aero-AQI/) · [⚡ Static Dashboard](https://akshanshpundir.github.io/Aero-AQI/aero-aqi.html) · [📖 Docs](#-quickstart)**
+**[🚀 Live Dashboard](https://akshanshpundir.github.io/Aero-AQI/) — single self-contained file, no build step.**
 
 </div>
 
@@ -25,6 +24,7 @@
 A liquid-glass environmental telemetry dashboard for **autonomous UAV air-quality surveillance** across the National Capital Region. Drone-04 streams PM2.5 / AQI readings over hotspot belts while CPCB, IMD and NASA FIRMS feeds fuse into one command view — plume curve, station cards, alerts, flight path and AI forecast.
 
 > Pixel-faithful to a `1357 × 871` reference grid — every size/spacing scales off `--u: min(100vw/1357, 100dvh/871)`.
+> The whole app is **one file**: [`aero-aqi.html`](./aero-aqi.html) (open it, that's it).
 
 ---
 
@@ -80,11 +80,11 @@ A liquid-glass environmental telemetry dashboard for **autonomous UAV air-qualit
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ How it fits together
 
 ```mermaid
 flowchart LR
-    D[Drone-04<br/>PM2.5 sensors] --> UI[AERO-AQI Dashboard]
+    D[Drone-04<br/>PM2.5 sensors] --> UI[aero-aqi.html<br/>dashboard]
     C[CPCB<br/>real-time telemetry] --> UI
     I[IMD<br/>weather API] --> UI
     F[NASA FIRMS<br/>thermal anomalies] --> UI
@@ -99,60 +99,44 @@ flowchart LR
 ## 📁 Project structure
 
 ```
-AERO-AQI/
-├── aero-aqi.html          # ⚡ self-contained static page (no build needed)
-├── index.html             # Vite entry → React app
-├── public/
-│   └── aero-aqi.html      # static page, served at /aero-aqi.html
-├── src/
-│   ├── main.tsx           # React bootstrap
-│   └── aero-aqi/
-│       ├── AeroAqi.tsx    # full interactive dashboard
-│       ├── data.ts        # stations, hours, hotspots, FIRMS, waypoints, AI rows
-│       └── aero-aqi.css   # liquid-glass system (--u grid, keyframes)
-├── .github/workflows/
-│   └── deploy.yml         # GitHub Pages CI → dist/
-└── README.md
+Aero-AQI/
+├── index.html            # 🚀 main file deployed to Pages (the dashboard)
+├── aero-aqi.html         # identical copy, also live at /aero-aqi.html
+├── README.md
+├── LICENSE
+└── .github/workflows/
+    └── deploy.yml        # Pages deploy — ships the single file, no build
 ```
 
-Two ways to experience it: the **React app** (`/`) and the **zero-dependency static page** (`/aero-aqi.html`) — same design, same data.
+No `node_modules`. No build step. No framework. Just the file.
 
 ---
 
-## 🚀 Quickstart
+## 🚀 Run it locally
 
 ```bash
 git clone https://github.com/AkshanshPundir/Aero-AQI.git
 cd Aero-AQI
-npm install
-npm run dev
 ```
 
-| Entry | Local URL |
-|---|---|
-| React app | http://localhost:5174/ |
-| Static page | http://localhost:5174/aero-aqi.html |
-| Static file (no server) | double-click `aero-aqi.html` |
+Then either:
 
-### Scripts
+- **Double-click `index.html`** — works straight from disk, or
+- **Serve it:** `npx serve .` → http://localhost:3000/
 
-| Command | Does what |
-|---|---|
-| `npm run dev` | Vite dev server (port 5174) |
-| `npm run build` | `tsc -b` + production build → `dist/` |
-| `npm run type-check` | Type-check only |
-| `npm run preview` | Preview the production build |
+> The React + Vite prototype from earlier development is preserved in git history
+> (commit `169b178`) for reference — deployment is the single file.
 
 ---
 
 ## 🌐 Deployment
 
-Push to `main` → the **Deploy to GitHub Pages** workflow builds and publishes `dist/` automatically.
+Push to `main` → the **Deploy to GitHub Pages** workflow publishes the file automatically. No build, no dependencies.
 
 | Surface | URL |
 |---|---|
-| React app | https://akshanshpundir.github.io/Aero-AQI/ |
-| Static dashboard | https://akshanshpundir.github.io/Aero-AQI/aero-aqi.html |
+| Main dashboard | https://akshanshpundir.github.io/Aero-AQI/ |
+| Same file, direct path | https://akshanshpundir.github.io/Aero-AQI/aero-aqi.html |
 
 > First time only: repo **Settings → Pages → Source → GitHub Actions**.
 
@@ -182,7 +166,7 @@ Push to `main` → the **Deploy to GitHub Pages** workflow builds and publishes 
 
 ## 🤝 Contributing
 
-PRs welcome — fork, branch off `main`, `npm run build` green, then open the PR.
+PRs welcome — fork, branch off `main`, then open the PR. Keep it to the single-file philosophy: everything inline in `aero-aqi.html`, mirrored to `index.html`.
 
 ## 👨‍✈️ Author
 
