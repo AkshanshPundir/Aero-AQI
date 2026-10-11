@@ -216,13 +216,15 @@ button{font:inherit}
 .sub div span{font-size:calc(10.5*var(--u));color:rgba(255,255,255,.62);font-weight:500}
 button.node{text-align:left;cursor:pointer;width:100%}
 button.node:hover{border-color:#fff}
-button.node.picked{outline:calc(2*var(--u)) solid #fff;outline-offset:calc(2*var(--u))}
+button.node.picked{outline:calc(2*var(--u)) solid #fff;outline-offset:calc(2*var(--u));box-shadow:0 0 0 calc(1*var(--u)) rgba(255,255,255,.9),0 0 calc(34*var(--u)) rgba(255,255,255,.30)}
 .node small{display:block;font-size:calc(11*var(--u));color:rgba(255,255,255,.62);font-weight:500;letter-spacing:.04em}
 .node strong{display:block;font-size:calc(14.5*var(--u));font-weight:600;margin:calc(2*var(--u)) 0 calc(8*var(--u))}
 .node-row{display:flex;align-items:center;justify-content:space-between}
 .node-row b{font-size:calc(30*var(--u));font-family:'Inter Tight',sans-serif}
 .node-row em{font-style:normal;font-size:calc(10.5*var(--u));font-weight:700;text-transform:uppercase;padding:calc(5*var(--u)) calc(10*var(--u));border-radius:999px}
 .vpoor{background:rgba(255,150,30,.3);border:1px solid rgba(255,150,30,.5);color:#ffd9a8}
+.mod{background:rgba(250,204,21,.22);color:#fde68a;border:1px solid rgba(250,204,21,.45)}
+.good{background:rgba(74,222,128,.20);color:#bbf7d0;border:1px solid rgba(74,222,128,.45)}
 /* footer */
 .footerbar{position:absolute;z-index:5;left:calc(126*var(--u));right:calc(38*var(--u));bottom:calc(18*var(--u));display:flex;align-items:center;justify-content:space-between;font-size:calc(11.5*var(--u));color:rgba(255,255,255,.62);animation:riseIn 1s var(--e-out) 1.2s both}
 .footerbar b{color:rgba(255,255,255,.85);font-weight:600}
@@ -378,7 +380,7 @@ button.node.picked{outline:calc(2*var(--u)) solid #fff;outline-offset:calc(2*var
   <header class="header">
     <div class="loc">
       <small id="liveLabel">UAV Telemetry Active</small>
-      <strong><span class="dot" id="liveDot"></span> Anand Vihar, New Delhi</strong>
+      <strong><span class="dot" id="liveDot"></span> <span id="locName">Anand Vihar, New Delhi</span></strong>
     </div>
     <div class="tools">
       <button class="btn-pill" id="deployBtn"><svg><use href="#i-plus"/></svg><span id="deployTxt">Deploy UAV</span></button>
@@ -392,8 +394,9 @@ button.node.picked{outline:calc(2*var(--u)) solid #fff;outline-offset:calc(2*var
   <section class="hero">
     <span class="chip"><i></i> CPCB &amp; NASA FIRMS Sync • Live Air Surveillance</span>
     <h1><span class="mask"><span>Severe Hazardous</span></span><span class="mask"><span>Smog &amp; AQI Plume</span></span></h1>
-    <p class="blurb">Aerial sensors onboard Anti-Gravity Drone-04 report micro-particle concentration spikes over Anand Vihar ISBT. Wind from NW at 14 km/h carrying agricultural thermal anomalies. Automated dispersal and public rerouting protocols initiated.</p>
+    <p class="blurb" id="blurb">Aerial sensors onboard Anti-Gravity Drone-04 report micro-particle concentration spikes over Anand Vihar ISBT. Wind from NW at 14 km/h carrying agricultural thermal anomalies. Automated dispersal and public rerouting protocols initiated.</p>
     <div class="hero-meta">
+      <span class="mini"><svg><use href="#i-sensor"/></svg> <b id="heroAqiNum">412 AQI</b>&nbsp;·&nbsp;<span id="heroAqiBand">Severe +</span></span>
       <span class="mini"><svg><use href="#i-drone"/></svg> Drone-04 <b>&nbsp;· Airborne</b></span>
       <span class="mini"><svg><use href="#i-warn"/></svg> NW plume <b>&nbsp;14 km/h</b></span>
       <span class="mini"><svg><use href="#i-cloud"/></svg> FIRMS <b>&nbsp;6 hotspots</b></span>
@@ -425,8 +428,8 @@ button.node.picked{outline:calc(2*var(--u)) solid #fff;outline-offset:calc(2*var
         <g stroke="rgba(255,255,255,.12)" stroke-width="1">
           <line x1="0" y1="40" x2="835" y2="40"/><line x1="0" y1="90" x2="835" y2="90"/><line x1="0" y1="140" x2="835" y2="140"/><line x1="0" y1="190" x2="835" y2="190"/>
         </g>
-        <path class="wave-fill" d="M0,168 C70,160 110,150 165,132 C220,114 260,96 320,74 C380,52 420,44 480,58 C540,72 580,120 640,138 C700,156 770,150 835,118 L835,230 L0,230 Z" fill="url(#fillG)"/>
-        <path class="wave-line" pathLength="1" d="M0,168 C70,160 110,150 165,132 C220,114 260,96 320,74 C380,52 420,44 480,58 C540,72 580,120 640,138 C700,156 770,150 835,118" stroke="url(#lineG)"/>
+        <path id="waveFill" class="wave-fill" d="M0,168 C70,160 110,150 165,132 C220,114 260,96 320,74 C380,52 420,44 480,58 C540,72 580,120 640,138 C700,156 770,150 835,118 L835,230 L0,230 Z" fill="url(#fillG)"/>
+        <path id="waveLine" class="wave-line" pathLength="1" d="M0,168 C70,160 110,150 165,132 C220,114 260,96 320,74 C380,52 420,44 480,58 C540,72 580,120 640,138 C700,156 770,150 835,118" stroke="url(#lineG)"/>
         <g id="dots"></g>
       </svg>
     </div>
@@ -515,7 +518,7 @@ button.node.picked{outline:calc(2*var(--u)) solid #fff;outline-offset:calc(2*var
   function toast(m){var d=document.createElement('div');d.className='toast';d.textContent=m;toasts.appendChild(d);while(toasts.children.length>3)toasts.removeChild(toasts.firstChild);setTimeout(function(){d.remove()},3000)}
   function tick(){try{$('clock').textContent=live?(new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',second:'2-digit'})+' IST'):'LINK PAUSED'}catch(e){$('clock').textContent=new Date().toLocaleTimeString()}}
   tick();setInterval(tick,1000);
-  setInterval(function(){if(!live)return;aqi=Math.max(398,Math.min(426,aqi+(Math.random()*6-3)));$('mainAqi').textContent=Math.round(aqi)},4000);
+  setInterval(function(){if(!live)return;var jb=(window.__AERO_JITTER&&window.__AERO_JITTER())||[398,426];aqi=Math.max(jb[0],Math.min(jb[1],aqi+(Math.random()*6-3)));$('mainAqi').textContent=Math.round(aqi)},4000);
 
   // chart dots
   var pts=[[0,168,'Anand Vihar',310,'av'],[165,132,'Punjabi Bagh',342,'pb'],[320,74,'RK Puram',388,'rkp'],[480,58,'Sec-62 Noida',412,'sec62'],[640,138,'Bulandshahr',365,null],[835,118,'Meerut Cantt',320,'meerut']];
@@ -639,7 +642,7 @@ button.node.picked{outline:calc(2*var(--u)) solid #fff;outline-offset:calc(2*var
   scrim.addEventListener('click',function(e){if(e.target===scrim)scrim.classList.remove('show')});
   $('doOff').addEventListener('click',function(){setLive(false);scrim.classList.remove('show')});
   function setLive(v){live=v;
-    $('liveLabel').textContent=v?'UAV Telemetry Active':'UAV Telemetry Paused';
+    $('liveLabel').textContent=(v?'UAV Telemetry Active':'UAV Telemetry Paused')+(window.__AERO_LOC_SUFFIX||'');
     $('liveDot').classList.toggle('paused',!v);
     $('liveBadge').classList.toggle('paused',!v);$('liveTxt').textContent=v?'Live':'Paused';
     $('powerLabel').innerHTML=v?'System<br>Disconnect':'Link paused<br>Reconnect';
@@ -695,13 +698,13 @@ button.node.picked{outline:calc(2*var(--u)) solid #fff;outline-offset:calc(2*var
     {k:'rkp',  lat:28.5631,lon:77.1867,base:388},
     {k:'sec62',lat:28.6139,lon:77.3655,base:365,w:'@8368'},
     {k:'meerut',lat:28.9845,lon:77.7064,base:328},
-    {k:'cyber',lat:28.4952,lon:77.0890,base:284},
+    {k:'cyber',lat:28.4952,lon:77.0890,base:170},
     {k:'knp',  lat:28.4744,lon:77.5030,base:352}
   ];
   var WAQI_TOKEN='demo';
   var MIN_LIVE=150; // below this, keep curated Severe-context defaults (284-412)
   var MAX_LIVE=500; // AQI scale tops at 500 ("beyond index") - clamp spikes
-  var SIM_LO=310, SIM_HI=425; // demo-stream Severe band
+  var SIM_SPAN=30, SIM_FLOOR=120; // per-station walk = base±span (station character kept)
   /* CPCB official breakpoint tables: [concLo,concHi,idxLo,idxHi] */
   var PM25_BP=[[0,30,0,50],[31,60,51,100],[61,90,101,200],[91,120,201,300],[121,250,301,400],[251,5000,401,500]];
   var PM10_BP=[[0,50,0,50],[51,100,51,100],[101,250,101,200],[251,350,201,300],[351,430,301,400],[431,8000,401,500]];
@@ -805,18 +808,25 @@ button.node.picked{outline:calc(2*var(--u)) solid #fff;outline-offset:calc(2*var
     if(a>400)return{t:'Severe +',cls:'haz'};
     if(a>=301)return{t:'Severe',cls:'sev'};
     if(a>=201)return{t:'Very Poor',cls:'vpoor'};
-    return null;
+    if(a>=101)return{t:'Moderate',cls:'mod'};
+    if(a>=51)return{t:'Satisfactory',cls:'mod'};
+    return{t:'Good',cls:'good'};
   }
   function setNodeBand(em,cls,txt){
     if(!em)return;
     em.classList.remove('sev','haz','vpoor');em.classList.add(cls);em.textContent=txt;
   }
+  var siteVals={}; // live per-site AQI mirror (drives chart + station switching)
+  SITES.forEach(function(s){siteVals[s.k]=s.base});
+  function stationBase(k){for(var i=0;i<SITES.length;i++)if(SITES[i].k===k)return SITES[i].base;return 350}
   function applyLive(vals,stamp,mode,quiet){
     var any=false;
+    Object.keys(vals).forEach(function(k){if(k.slice(-3)!=='_pm'&&typeof vals[k]==='number')siteVals[k]=vals[k]});
     // main hero card <- Anand Vihar
     if(vals.av){
       $('mainAqi').textContent=vals.av;
-      var b=bandFor(vals.av);if(b)$('mainBand').textContent=b.t;
+      var b=bandFor(vals.av);
+      if(b){$('mainBand').textContent=b.t;$('mainBand').className='badge'+((b.cls==='haz'||b.cls==='sev')?'':' '+b.cls)}
       if(vals.av_pm)$('mainPm').textContent=vals.av_pm+' µg/m³';
       any=true;
     }
@@ -842,6 +852,7 @@ button.node.picked{outline:calc(2*var(--u)) solid #fff;outline-offset:calc(2*var
         if(bandFor(v))p[3]=v;
       });
     }
+    try{waveTo(currentDotVals())}catch(e){/* chart morphs on next tick */}
     if(any&&!quiet){
       var fh=document.querySelector('.f-head span');
       if(fh)fh.textContent=(mode==='SIM'?'SIM • demo stream ':'LIVE • NCR mesh ')+stamp;
@@ -857,8 +868,9 @@ button.node.picked{outline:calc(2*var(--u)) solid #fff;outline-offset:calc(2*var
     if(!simOn)return;
     var vals={};
     SITES.forEach(function(s){
+      var lo=Math.max(SIM_FLOOR,s.base-SIM_SPAN),hi=Math.min(MAX_LIVE,s.base+SIM_SPAN);
       var v=Math.round(simVals[s.k]+(Math.random()*10-5));
-      v=Math.max(SIM_LO,Math.min(SIM_HI,v));
+      v=Math.max(lo,Math.min(hi,v));
       simVals[s.k]=v;vals[s.k]=v;
     });
     vals.av_pm=Math.round(vals.av*0.93);
@@ -867,8 +879,8 @@ button.node.picked{outline:calc(2*var(--u)) solid #fff;outline-offset:calc(2*var
   function startSim(){
     if(simOn)return;simOn=true;
     simVals={};
-    SITES.forEach(function(s){simVals[s.k]=Math.max(SIM_LO,Math.min(SIM_HI,s.base))});
-    toast2('Offline mode • demo stream active (310-425)');
+    SITES.forEach(function(s){simVals[s.k]=siteVals[s.k]!=null?siteVals[s.k]:s.base});
+    toast2('Offline mode • demo stream active');
     tickSim();
     if(!simTimer)simTimer=setInterval(tickSim,5000);
     if(!retryTimer)retryTimer=setInterval(function(){if(!document.hidden)syncLive()},60000);
@@ -910,6 +922,114 @@ button.node.picked{outline:calc(2*var(--u)) solid #fff;outline-offset:calc(2*var
       else startSim();
     });
   }
+  /* ---------- 3. STATION SWITCHING + WAVE MORPH ---------- */
+  var STATIONS={
+    av:{loc:'Anand Vihar, New Delhi',suffix:' — Anand Vihar, New Delhi',title:'New Delhi — Anand Vihar Terminal',blurb:'Aerial sensors onboard Anti-Gravity Drone-04 report micro-particle concentration spikes over Anand Vihar ISBT. Wind from NW at 14 km/h carrying agricultural thermal anomalies. Automated dispersal and public rerouting protocols initiated.'},
+    pb:{loc:'Punjabi Bagh, New Delhi',suffix:' — Punjabi Bagh, New Delhi',title:'New Delhi — Punjabi Bagh',blurb:'Aerial sensors onboard Anti-Gravity Drone-04 report dense particulate layering over Punjabi Bagh. Ring-road traffic emissions pooling under a low inversion lid. Advisory broadcast to western corridor.'},
+    rkp:{loc:'RK Puram, New Delhi',suffix:' — RK Puram, New Delhi',title:'New Delhi — RK Puram',blurb:'Aerial sensors onboard Anti-Gravity Drone-04 track a stubborn smog cell over RK Puram. Institutional-zone diesel gensets adding to the load. Enforcement teams notified.'},
+    sec62:{loc:'Sector 62, Noida',suffix:' — Sector 62, Noida',title:'Uttar Pradesh / Noida / Sector 62',blurb:'Aerial sensors onboard Anti-Gravity Drone-03 report industrial-corridor haze settling over Sector 62, Noida. Cross-border plume inflow from the east. Sampling cadence doubled.'},
+    meerut:{loc:'Shastri Nagar, Meerut',suffix:' — Shastri Nagar, Meerut',title:'Uttar Pradesh / Meerut / Sector 3 Shastri Nagar',blurb:'Aerial sensors onboard Anti-Gravity Drone-05 report particulate build-up over Shastri Nagar, Meerut. Agricultural thermal anomalies drifting in from the north-west belt. Dispersal protocol on standby.'},
+    cyber:{loc:'Cyber City, Gurugram',suffix:' — Cyber City, Gurugram',title:'Haryana / Gurugram / Cyber City',blurb:'Aerial sensors onboard Anti-Gravity Drone-02 report elevated micro-particle readings over Cyber City, Gurugram. Traffic-corridor emissions pooling under low wind shear. Rerouting advisories relayed to NCR traffic control.'},
+    knp:{loc:'Knowledge Park, Gr. Noida',suffix:' — Knowledge Park, Gr. Noida',title:'Uttar Pradesh / Greater Noida / Knowledge Park',blurb:'Aerial sensors onboard Anti-Gravity Drone-03 report construction dust and corridor traffic spiking PM10 over Knowledge Park, Greater Noida. Monitoring interval tightened to five minutes.'}
+  };
+  var currentStation='av';window.__AERO_STATION='av';
+  function refreshLabel(){
+    var paused=$('liveDot')&&$('liveDot').classList.contains('paused');
+    $('liveLabel').textContent=(paused?'UAV Telemetry Paused':'UAV Telemetry Active')+(window.__AERO_LOC_SUFFIX||'');
+  }
+  function setMain(v,pm){
+    $('mainAqi').textContent=v;
+    var b=bandFor(v);
+    if(b){$('mainBand').textContent=b.t;$('mainBand').className='badge'+((b.cls==='haz'||b.cls==='sev')?'':' '+b.cls)}
+    $('mainPm').textContent=(pm!=null?pm:Math.round(v*0.93))+' µg/m³';
+    var hn=$('heroAqiNum'),hb=$('heroAqiBand');
+    if(hn)hn.textContent=v+' AQI';if(hb&&b)hb.textContent=b.t;
+  }
+  /* Jitter anchor for the base script: hero number breathes around the ACTIVE station */
+  window.__AERO_JITTER=function(){
+    var v=siteVals[currentStation];
+    if(v==null)v=stationBase(currentStation);
+    return[Math.max(60,v-8),Math.min(500,v+8)];
+  };
+  /* Wave chart: smooth Catmull-Rom morph across the 6 NCR dot positions */
+  var DOTS_X=[0,165,320,480,640,835],DOT_SITE=['av','pb','rkp','sec62',null,'meerut'],DOT_BASE=[310,342,388,412,365,328];
+  function yFor(a){return Math.round(205-(a-120)*0.32)}
+  function smoothD(ys){
+    var d='M0,'+ys[0];
+    for(var i=0;i<5;i++){
+      var p0=ys[Math.max(0,i-1)],p1=ys[i],p2=ys[i+1],p3=ys[Math.min(5,i+2)];
+      var x1=DOTS_X[i],x2=DOTS_X[i+1],dx=(x2-x1)/3;
+      d+=' C'+Math.round(x1+dx)+','+Math.round(p1+(p2-p0)/6)
+        +' '+Math.round(x1+2*dx)+','+Math.round(p2-(p3-p1)/6)+' '+x2+','+p2;
+    }
+    return d;
+  }
+  function currentDotVals(){
+    if(window.__AERO_PTS)return window.__AERO_PTS.map(function(p){return p[3]});
+    return DOT_BASE.slice();
+  }
+  var waveRaf=null;
+  function waveTo(aqis){
+    var line=$('waveLine'),fill=$('waveFill'),dots=document.querySelectorAll('#dots circle');
+    if(!line||!fill||!dots||dots.length<6||!aqis||aqis.length<6)return;
+    var from=[],i;
+    for(i=0;i<6;i++){var cy=dots[i].getAttribute('cy');from.push(cy==null?yFor(DOT_BASE[i]):+cy)}
+    var to=aqis.map(yFor),t0=null;
+    if(waveRaf)cancelAnimationFrame(waveRaf);
+    function fr(t){
+      if(t0==null)t0=t;
+      var k=Math.min(1,(t-t0)/650),e=1-Math.pow(1-k,3);
+      var ys=from.map(function(f,j){return Math.round(f+(to[j]-f)*e)});
+      var d=smoothD(ys);
+      line.setAttribute('d',d);fill.setAttribute('d',d+' L835,230 L0,230 Z');
+      for(var j=0;j<6;j++)dots[j].setAttribute('cy',ys[j]);
+      if(k<1)waveRaf=requestAnimationFrame(fr);else waveRaf=null;
+    }
+    waveRaf=requestAnimationFrame(fr);
+  }
+  /* Per-station hourly trend (unique diurnal shape per region) */
+  var H_OFF=[-102,-70,-24,0,-47,-92];
+  function renderHours(key){
+    var v=siteVals[key]!=null?siteVals[key]:stationBase(key);
+    var btns=document.querySelectorAll('#hours .hour');
+    Array.prototype.forEach.call(btns,function(h,i){
+      var a=Math.max(60,Math.min(500,v+H_OFF[i]));
+      h.setAttribute('data-aqi',a);
+      var b=h.querySelector('b');if(b)b.textContent=a;
+      var em=h.querySelector('em'),bd=bandFor(a);
+      if(em&&bd){em.className=bd.cls;em.textContent=(bd.cls==='haz'?'Hazardous':bd.t)}
+    });
+  }
+  function selectStation(key){
+    if(!STATIONS[key])return;
+    currentStation=key;window.__AERO_STATION=key;
+    var st=STATIONS[key];
+    var v=siteVals[key]!=null?siteVals[key]:stationBase(key);
+    var pm=(key==='av'&&siteVals.av_pm!=null)?siteVals.av_pm:Math.round(v*0.93);
+    $('locName').textContent=st.loc;
+    window.__AERO_LOC_SUFFIX=st.suffix;refreshLabel();
+    $('mainRegion').textContent=st.title;
+    setMain(v,pm);
+    $('blurb').textContent=st.blurb;
+    Array.prototype.forEach.call(document.querySelectorAll('button.node'),function(x){
+      x.classList.toggle('picked',x.getAttribute('data-site')===key);
+    });
+    renderHours(key);
+    try{waveTo(currentDotVals())}catch(e){}
+  }
+  /* Rail cards switch the active sampling node (runs with the base handler) */
+  document.querySelectorAll('button.node[data-site]').forEach(function(b){
+    b.addEventListener('click',function(){selectStation(b.getAttribute('data-site'))});
+  });
+  /* Hotspot labels switch too (Bulandshahr keeps pin-only behaviour) */
+  document.querySelectorAll('#hotspots button[data-site]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var k=b.getAttribute('data-site');
+      if(STATIONS[k])selectStation(k);
+    });
+  });
+  window.addEventListener('offline',function(){startSim()});
+  window.addEventListener('online',function(){syncLive()});
   setTimeout(syncLive,2000); // first sync after entry choreography
   setInterval(function(){if(!document.hidden&&!simOn)syncLive()},600000); // refresh every 10 min
 })();
