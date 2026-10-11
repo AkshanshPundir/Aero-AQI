@@ -33,17 +33,25 @@ button{font:inherit}
   background:#04121b url('https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?w=1920&q=80&auto=format&fit=crop') center 25% / cover no-repeat;
 }
 .stage::after{
-  content:"";position:absolute;inset:0;pointer-events:none;z-index:1;
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:2;
   background:
     linear-gradient(105deg, rgba(4,16,24,.34) 0%, rgba(4,16,24,.20) 40%, rgba(4,16,24,.06) 78%, transparent 100%),
     linear-gradient(180deg, rgba(4,16,24,.12) 0%, transparent 22%),
     linear-gradient(0deg, rgba(4,16,24,.07), rgba(4,16,24,.07));
 }
 .stage::before{
-  content:"";position:absolute;inset:0;z-index:0;
+  content:"";position:absolute;inset:0;z-index:1;
   background:radial-gradient(120% 90% at 70% 10%, rgba(255,120,40,.14), transparent 55%),
              radial-gradient(100% 80% at 15% 90%, rgba(0,180,255,.10), transparent 60%);
 }
+/* Moving video background: sits above the fallback image, below vignette + glass */
+.stage video.bgvid{
+  position:absolute;inset:0;width:100%;height:100%;z-index:0;
+  object-fit:cover;object-position:center 25%;background:#04121b;
+}
+/* Ken Burns fallback: slow pan on the static image when video is unavailable */
+.stage.kb{background-size:cover;animation:kbpan 38s ease-in-out infinite alternate}
+@keyframes kbpan{from{background-position:center 20%}to{background-position:center 38%}}
 /* ============ SIDEBAR ============ */
 .sidebar{
   position:absolute;z-index:5;
@@ -346,6 +354,9 @@ button.node.picked{outline:calc(2*var(--u)) solid #fff;outline-offset:calc(2*var
 </defs></svg>
 
 <div class="stage" role="main" aria-label="AERO-AQI — Autonomous Airborne Pollution Intelligence">
+  <video class="bgvid" id="bgVideo" autoplay loop muted playsinline preload="auto" aria-hidden="true" tabindex="-1">
+    <source src="https://assets.mixkit.co/videos/preview/mixkit-dramatic-dark-clouds-over-a-city-41527-large.mp4" type="video/mp4">
+  </video>
   <!-- SIDEBAR -->
   <aside class="sidebar" aria-label="Primary">
     <span class="pip" id="pip"></span>
@@ -420,7 +431,7 @@ button.node.picked{outline:calc(2*var(--u)) solid #fff;outline-offset:calc(2*var
       </svg>
     </div>
     <div class="hotspots" id="hotspots">
-      <button class="hot" data-aqi="310"><i></i>Anand Vihar</button><button data-aqi="342"><i></i>Punjabi Bagh</button><button data-aqi="388"><i></i>RK Puram</button><button data-aqi="365"><i></i>Sector 62 Noida</button><button data-aqi="320"><i></i>Bulandshahr</button><button data-aqi="328"><i></i>Meerut Cantt</button>
+      <button class="hot" data-site="av" data-aqi="310"><i></i>Anand Vihar</button><button data-site="pb" data-aqi="342"><i></i>Punjabi Bagh</button><button data-site="rkp" data-aqi="388"><i></i>RK Puram</button><button data-site="sec62" data-aqi="365"><i></i>Sector 62 Noida</button><button data-aqi="320"><i></i>Bulandshahr</button><button data-site="meerut" data-aqi="328"><i></i>Meerut Cantt</button>
     </div>
   </section>
 
@@ -432,12 +443,12 @@ button.node.picked{outline:calc(2*var(--u)) solid #fff;outline-offset:calc(2*var
       <div class="sub">
         <div><svg><use href="#i-wind"/></svg><b>14 km/h</b><span>NW Wind</span></div>
         <div><svg><use href="#i-drop"/></svg><b>88%</b><span>RH</span></div>
-        <div><svg><use href="#i-sensor"/></svg><b>385 µg/m³</b><span>PM2.5</span></div>
+        <div><svg><use href="#i-sensor"/></svg><b id="mainPm">385 µg/m³</b><span>PM2.5</span></div>
       </div>
     </article>
-    <button class="card node" data-name="Shastri Nagar Node" data-aqi="328" data-band="Severe" data-region="Uttar Pradesh / Meerut / Sector 3 Shastri Nagar"><small>Uttar Pradesh / Meerut / Sector 3 Shastri Nagar</small><strong>Shastri Nagar Node</strong><div class="node-row"><b>328 <span style="font-size:13px;font-weight:600">AQI</span></b><em class="sev">Severe</em></div></button>
-    <button class="card node" data-name="Cyber City Node" data-aqi="284" data-band="Very Poor" data-region="Haryana / Gurugram / Cyber City"><small>Haryana / Gurugram / Cyber City</small><strong>Cyber City Node</strong><div class="node-row"><b>284 <span style="font-size:13px;font-weight:600">AQI</span></b><em class="vpoor">Very Poor</em></div></button>
-    <button class="card node" data-name="Knowledge Park Node" data-aqi="352" data-band="Severe" data-region="Uttar Pradesh / Greater Noida / Knowledge Park"><small>Uttar Pradesh / Greater Noida / Knowledge Park</small><strong>Knowledge Park Node</strong><div class="node-row"><b>352 <span style="font-size:13px;font-weight:600">AQI</span></b><em class="sev">Severe</em></div></button>
+    <button class="card node" data-site="meerut" data-name="Shastri Nagar Node" data-aqi="328" data-band="Severe" data-region="Uttar Pradesh / Meerut / Sector 3 Shastri Nagar"><small>Uttar Pradesh / Meerut / Sector 3 Shastri Nagar</small><strong>Shastri Nagar Node</strong><div class="node-row"><b class="nodeAqi">328 <span style="font-size:13px;font-weight:600">AQI</span></b><em class="sev nodeBand">Severe</em></div></button>
+    <button class="card node" data-site="cyber" data-name="Cyber City Node" data-aqi="284" data-band="Very Poor" data-region="Haryana / Gurugram / Cyber City"><small>Haryana / Gurugram / Cyber City</small><strong>Cyber City Node</strong><div class="node-row"><b class="nodeAqi">284 <span style="font-size:13px;font-weight:600">AQI</span></b><em class="vpoor nodeBand">Very Poor</em></div></button>
+    <button class="card node" data-site="knp" data-name="Knowledge Park Node" data-aqi="352" data-band="Severe" data-region="Uttar Pradesh / Greater Noida / Knowledge Park"><small>Uttar Pradesh / Greater Noida / Knowledge Park</small><strong>Knowledge Park Node</strong><div class="node-row"><b class="nodeAqi">352 <span style="font-size:13px;font-weight:600">AQI</span></b><em class="sev nodeBand">Severe</em></div></button>
   </aside>
 
   <!-- DRAWER -->
@@ -507,7 +518,8 @@ button.node.picked{outline:calc(2*var(--u)) solid #fff;outline-offset:calc(2*var
   setInterval(function(){if(!live)return;aqi=Math.max(398,Math.min(426,aqi+(Math.random()*6-3)));$('mainAqi').textContent=Math.round(aqi)},4000);
 
   // chart dots
-  var pts=[[0,168,'Anand Vihar',310],[165,132,'Punjabi Bagh',342],[320,74,'RK Puram',388],[480,58,'Sec-62 Noida',412],[640,138,'Bulandshahr',365],[835,118,'Meerut Cantt',320]];
+  var pts=[[0,168,'Anand Vihar',310,'av'],[165,132,'Punjabi Bagh',342,'pb'],[320,74,'RK Puram',388,'rkp'],[480,58,'Sec-62 Noida',412,'sec62'],[640,138,'Bulandshahr',365,null],[835,118,'Meerut Cantt',320,'meerut']];
+  window.__AERO_PTS=pts;
   var g=$('dots'), tip=$('tooltip'), svg=$('waveSvg');
   pts.forEach(function(p,i){
     var c=document.createElementNS('http://www.w3.org/2000/svg','circle');
@@ -638,6 +650,136 @@ button.node.picked{outline:calc(2*var(--u)) solid #fff;outline-offset:calc(2*var
     if(e.key==='Escape'){closePops();scrim.classList.remove('show');setNav('dashboard')}
     if(e.key==='/'&&document.activeElement.tagName!=='INPUT'){e.preventDefault();closePops();searchPop.classList.add('show');renderResults('');$('searchInput').focus()}
   });
+})();
+</script>
+<script>
+/* AERO-AQI live layer: (1) moving storm video background with Ken Burns fallback,
+   (2) live NCR AQI telemetry via Open-Meteo (keyless, CORS-open), with curated
+   Severe/Hazardous NCR defaults (284-412) if the API is down or reads low. */
+(function(){
+  'use strict';
+  function $(id){return document.getElementById(id)}
+
+  /* ---------- 1. VIDEO BACKGROUND ---------- */
+  var stage=document.querySelector('.stage'), vid=$('bgVideo');
+  function bgFallback(){
+    if(vid){try{vid.pause()}catch(e){} vid.remove(); vid=null}
+    if(stage)stage.classList.add('kb');
+  }
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches){
+    bgFallback(); // calm users: static image, no motion
+  }else if(vid){
+    if(window.innerWidth<=860){bgFallback()} // mobile: save data, Ken Burns image
+    else{
+      var src=vid.querySelector('source');
+      if(src)src.addEventListener('error',bgFallback);
+      vid.addEventListener('error',bgFallback);
+      try{var pr=vid.play();if(pr&&pr.catch)pr.catch(bgFallback)}catch(e){bgFallback()}
+      setTimeout(function(){ // watchdog: no frames in 7s -> fall back
+        if(vid&&vid.readyState<2)bgFallback();
+      },7000);
+      document.addEventListener('visibilitychange',function(){
+        if(!vid)return;
+        try{document.hidden?vid.pause():vid.play().catch(function(){})}catch(e){}
+      });
+    }
+  }
+
+  /* ---------- 2. LIVE AQI DATA ---------- */
+  var SITES=[
+    {k:'av',   lat:28.6509,lon:77.3155,base:412},
+    {k:'pb',   lat:28.6681,lon:77.1246,base:342},
+    {k:'rkp',  lat:28.5631,lon:77.1867,base:388},
+    {k:'sec62',lat:28.6139,lon:77.3655,base:365},
+    {k:'meerut',lat:28.9845,lon:77.7064,base:328},
+    {k:'cyber',lat:28.4952,lon:77.0890,base:284},
+    {k:'knp',  lat:28.4744,lon:77.5030,base:352}
+  ];
+  var BASE={};SITES.forEach(function(s){BASE[s.k]=s.base});
+  var MIN_LIVE=150; // below this, keep curated Severe-context defaults (284-412)
+  var MAX_LIVE=500; // US AQI scale tops at 500 ("beyond index") - clamp spikes
+  function toast2(m){
+    var box=$('toasts');if(!box)return;
+    var d=document.createElement('div');d.className='toast';d.textContent=m;box.appendChild(d);
+    while(box.children.length>3)box.removeChild(box.firstChild);
+    setTimeout(function(){if(d.parentNode)d.parentNode.removeChild(d)},3200);
+  }
+  function bandFor(a){
+    if(a>400)return{t:'Severe +',cls:'haz'};
+    if(a>=301)return{t:'Severe',cls:'sev'};
+    if(a>=201)return{t:'Very Poor',cls:'vpoor'};
+    return null;
+  }
+  function setNodeBand(em,cls,txt){
+    if(!em)return;
+    em.classList.remove('sev','haz','vpoor');em.classList.add(cls);em.textContent=txt;
+  }
+  function applyLive(vals,stamp){
+    var any=false;
+    // main hero card <- Anand Vihar
+    if(vals.av){
+      $('mainAqi').textContent=vals.av;
+      var b=bandFor(vals.av);if(b)$('mainBand').textContent=b.t;
+      if(vals.av_pm)$('mainPm').textContent=vals.av_pm+' µg/m³';
+      any=true;
+    }
+    // neighbour node cards
+    Array.prototype.forEach.call(document.querySelectorAll('button.node[data-site]'),function(btn){
+      var v=vals[btn.getAttribute('data-site')];if(v==null)return;
+      var b=bandFor(v);if(!b)return;
+      btn.setAttribute('data-aqi',v);btn.setAttribute('data-band',b.t);
+      var n=btn.querySelector('.nodeAqi');
+      if(n)n.innerHTML=v+' <span style="font-size:13px;font-weight:600">AQI</span>';
+      setNodeBand(btn.querySelector('.nodeBand'),b.cls,b.t);
+      any=true;
+    });
+    // hotspot labels + wave dots (shared pts array from main script)
+    Array.prototype.forEach.call(document.querySelectorAll('#hotspots button[data-site]'),function(btn){
+      var v=vals[btn.getAttribute('data-site')];if(v==null)return;
+      if(!bandFor(v))return;
+      btn.setAttribute('data-aqi',v);any=true;
+    });
+    if(window.__AERO_PTS){
+      window.__AERO_PTS.forEach(function(p){
+        var v=vals[p[4]];if(v==null)return;
+        if(bandFor(v))p[3]=v;
+      });
+    }
+    if(any){
+      var fh=document.querySelector('.f-head span');
+      if(fh)fh.textContent='LIVE • Open-Meteo '+stamp;
+      toast2('Live AQI synced • Open-Meteo');
+    }
+  }
+  function syncLive(){
+    var ctrl=null;
+    try{ctrl=new AbortController();}catch(e){}
+    var timer=setTimeout(function(){try{if(ctrl)ctrl.abort()}catch(e){}},9000);
+    var lats=SITES.map(function(s){return s.lat}).join(',');
+    var lons=SITES.map(function(s){return s.lon}).join(',');
+    var url='https://air-quality-api.open-meteo.com/v1/air-quality?latitude='+lats
+      +'&longitude='+lons+'&current=us_aqi,pm2_5&timezone=Asia%2FKolkata';
+    fetch(url,ctrl?{signal:ctrl.signal}:{}).then(function(r){
+      clearTimeout(timer);
+      if(!r.ok)throw new Error('http '+r.status);
+      return r.json();
+    }).then(function(j){
+      var arr=Array.isArray(j)?j:[j], vals={}, stamp='';
+      arr.forEach(function(item,i){
+        var c=item&&item.current;if(!c)return;
+        var aqi=(c.us_aqi==null?null:Math.round(c.us_aqi));
+        if(aqi==null||aqi<MIN_LIVE)return; // keep curated Severe defaults
+        aqi=Math.min(MAX_LIVE,aqi);
+        vals[SITES[i].k]=aqi;
+        if(c.pm2_5!=null)vals[SITES[i].k+'_pm']=Math.round(c.pm2_5);
+        if(c.time)stamp=c.time.slice(11,16);
+      });
+      if(stamp===''){var d=new Date();stamp=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
+      applyLive(vals,stamp||'now');
+    }).catch(function(){clearTimeout(timer);/* silent: curated NCR defaults stay on screen */});
+  }
+  setTimeout(syncLive,2000); // first sync after entry choreography
+  setInterval(function(){if(!document.hidden)syncLive()},600000); // refresh every 10 min
 })();
 </script>
 </body>
